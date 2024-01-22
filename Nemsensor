@@ -1,0 +1,15 @@
+#include <dht11.h> // Nem sensörü için kütüphaneyi ekliyoruz
+
+#define sensorPin 2 // Sensörün bağlı olduğu pin
+dht11 nemSensoru; // Sensör için bir nesne oluşturuyoruz
+
+void setup() {
+  Serial.begin(9600); // Seri haberleşmeyi başlatıyoruz
+}
+
+void loop() {
+  int okuma = nemSensoru.read(sensorPin); // Sensörden veri okuyoruz
+  Serial.print("Nem orani: %"); 
+  Serial.println(nemSensoru.humidity); // Nem oranını seri monitöre yazdırıyoruz
+  delay(1000); // 1 saniye bekliyoruz
+}
