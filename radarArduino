@@ -1,0 +1,88 @@
+#include <Servo.h> // Servo motor için kütüphaneyi ekliyoruz
+#include <LiquidCrystal.h> // LCD ekran için kütüphaneyi ekliyoruz
+
+#define trigPin 9 // Ultrasonik sensörün trig pinini 9. pine bağlıyoruz
+#define echoPin 10 // Ultrasonik sensörün echo pinini 10. pine bağlıyoruz
+#define buzzer 11 // Buzzer'ı 11. pine bağlıyoruz
+#define led 12 // LED'i 12. pine bağlıyoruz
+#define esik 10 // Mesafe eşik değerini 10 cm olarak belirliyoruz
+
+Servo servo; // Servo motor için bir nesne oluşturuyoruz
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2); // LCD ekran için bir nesne oluşturuyoruz
+
+void setup() {
+  Serial.begin(9600); // Seri haberleşmeyi başlatıyoruz
+  pinMode(trigPin, OUTPUT); // Trig pini çıkış olarak tanımlıyoruz
+  pinMode(echoPin, INPUT); // Echo pini giriş olarak tanımlıyoruz
+  pinMode(buzzer, OUTPUT); // Buzzer çıkış olarak tanımlıyoruz
+  pinMode(led, OUTPUT); // LED çıkış olarak tanımlıyoruz
+  servo.attach(8); // Servo motoru 8. pine bağlıyoruz
+  lcd.begin(16, 2); // LCD ekranı 16x2 olarak başlatıyoruz
+}
+
+void loop() {
+  for (int i = 0; i <= 180; i++) { // Servo motoru 0 ile 180 derece arasında döndürüyoruz
+    servo.write(i); // Servo motorun açısını ayarlıyoruz
+    delay(15); // 15 ms bekliyoruz
+    float mesafe = mesafeHesapla(); // Mesafe hesaplayan fonksiyonu çağırıyoruz
+    Serial.print(i); // Açı değerini seri monitöre yazdırıyoruz
+    Serial.print(","); // Virgül koyuyoruz
+    Serial.print(mesafe); // Mesafe değerini seri monitöre yazdırıyoruz
+    Serial.println("."); // Nokta koyuyoruz
+    lcd.clear(); // LCD ekranı temizliyoruz
+    lcd.setCursor(0, 0); // LCD ekranın ilk satırına gidiyoruz
+    lcd.print("Aci: "); // Açı yazıyoruz
+    lcd.print(i); // Açı değerini yazıyoruz
+    lcd.print(" derece"); // Derece yazıyoruz
+    lcd.setCursor(0, 1); // LCD ekranın ikinci satırına gidiyoruz
+    lcd.print("Mesafe: "); // Mesafe yazıyoruz
+    lcd.print(mesafe); // Mesafe değerini yazıyoruz
+    lcd.print(" cm"); // cm yazıyoruz
+    if (mesafe < esik) { // Eğer mesafe eşik değerinden küçükse
+      digitalWrite(buzzer, HIGH); // Buzzer'ı çalıştırıyoruz
+      digitalWrite(led, HIGH); // LED'i yakıyoruz
+    }
+    else { // Eğer mesafe eşik değerinden büyükse
+      digitalWrite(buzzer, LOW); // Buzzer'ı durduruyoruz
+      digitalWrite(led, LOW); // LED'i söndürüyoruz
+    }
+  }
+
+  for (int i = 180; i > 0; i--) { // Servo motoru 180 ile 0 derece arasında döndürüyoruz
+    servo.write(i); // Servo motorun açısını ayarlıyoruz
+    delay(15); // 15 ms bekliyoruz
+    float mesafe = mesafeHesapla(); // Mesafe hesaplayan fonksiyonu çağırıyoruz
+    Serial.print(i); // Açı değerini seri monitöre yazdırıyoruz
+    Serial.print(","); // Virgül koyuyoruz
+    Serial.print(mesafe); // Mesafe değerini seri monitöre yazdırıyoruz
+    Serial.println("."); // Nokta koyuyoruz
+    lcd.clear(); // LCD ekranı temizliyoruz
+    lcd.setCursor(0, 0); // LCD ekranın ilk satırına gidiyoruz
+    lcd.print("Aci: "); // Açı yazıyoruz
+    lcd.print(i); // Açı değerini yazıyoruz
+    lcd.print(" derece"); // Derece yazıyoruz
+    lcd.setCursor(0, 1); // LCD ekranın ikinci satırına gidiyoruz
+    lcd.print("Mesafe: "); // Mesafe yazıyoruz
+    lcd.print(mesafe); // Mesafe değerini yazıyoruz
+    lcd.print(" cm"); // cm yazıyoruz
+    if (mesafe < esik) { // Eğer mesafe eşik değerinden küçükse
+      digitalWrite(buzzer, HIGH); // Buzzer'ı çalıştırıyoruz
+      digitalWrite(led, HIGH); // LED'i yakıyoruz
+    }
+    else { // Eğer mesafe eşik değerinden büyükse
+      digitalWrite(buzzer, LOW); // Buzzer'ı durduruyoruz
+      digitalWrite(led, LOW); // LED'i söndürüyoruz
+    }
+  }
+}
+
+float mesafeHesapla() { // Mesafe hesaplayan fonksiyon
+  digitalWrite(trigPin, LOW); // Trig pini düşük yapıyoruz
+  delayMicroseconds(2); // 2 mikrosaniye bekliyoruz
+  digitalWrite(trigPin, HIGH); // Trig pini yüksek yapıyoruz
+  delayMicroseconds(10); // 10 mikrosaniye bekliyoruz
+  digitalWrite(trigPin, LOW); // Trig pini düşük yapıyoruz
+  float sure = pulseIn(echoPin, HIGH); // Echo pininden gelen sinyalin süresini ölçüyoruz
+  float mesafe = sure * 0.034 / 2; // Süreyi mesafeye çeviriyoruz
+  return mesafe; // Mesafeyi döndürüyoruz
+}
