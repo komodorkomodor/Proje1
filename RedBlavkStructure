@@ -1,0 +1,230 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// A Red-Black tree node structure
+struct Node
+{
+    int data; // data stored in the node
+    char color; // color of the node (R or B)
+    struct Node *left, *right, *parent; // pointers to left, right and parent nodes
+};
+
+// A utility function to create a new Red-Black tree node
+struct Node *newNode(int data)
+{
+    struct Node *temp = (struct Node *)malloc(sizeof(struct Node));
+    temp->data = data;
+    temp->color = 'R'; // new nodes are always red
+    temp->left = temp->right = temp->parent = NULL;
+    return temp;
+}
+
+// A utility function to do left rotation
+void leftRotate(struct Node **root, struct Node *pt)
+{
+    struct Node *pt_right = pt->right;
+
+    pt->right = pt_right->left;
+
+    if (pt->right != NULL)
+        pt->right->parent = pt;
+
+    pt_right->parent = pt->parent;
+
+    if (pt->parent == NULL)
+        *root = pt_right;
+
+    else if (pt == pt->parent->left)
+        pt->parent->left = pt_right;
+
+    else
+        pt->parent->right = pt_right;
+
+    pt_right->left = pt;
+    pt->parent = pt_right;
+}
+
+// A utility function to do right rotation
+void rightRotate(struct Node **root, struct Node *pt)
+{
+    struct Node *pt_left = pt->left;
+
+    pt->left = pt_left->right;
+
+    if (pt->left != NULL)
+        pt->left->parent = pt;
+
+    pt_left->parent = pt->parent;
+
+    if (pt->parent == NULL)
+        *root = pt_left;
+
+    else if (pt == pt->parent->left)
+        pt->parent->left = pt_left;
+
+    else
+        pt->parent->right = pt_left;
+
+    pt_left->right = pt;
+    pt->parent = pt_left;
+}
+
+// This function fixes violations caused by BST insertion
+void fixViolation(struct Node **root, struct Node *pt)
+{
+    struct Node *parent_pt = NULL;
+    struct Node *grand_parent_pt = NULL;
+
+    while ((pt != *root) && (pt->color != 'B') &&
+           (pt->parent->color == 'R'))
+    {
+
+        parent_pt = pt->parent;
+        grand_parent_pt = pt->parent->parent;
+
+        /*  Case : A
+            Parent of pt is left child of Grand-parent of pt */
+        if (parent_pt == grand_parent_pt->left)
+        {
+
+            struct Node *uncle_pt = grand_parent_pt->right;
+
+            /* Case : 1
+               The uncle of pt is also red
+               Only Recoloring required */
+            if (uncle_pt != NULL && uncle_pt->color == 'R')
+            {
+                grand_parent_pt->color = 'R';
+                parent_pt->color = 'B';
+                uncle_pt->color = 'B';
+                pt = grand_parent_pt;
+            }
+
+            else
+            {
+                /* Case : 2
+                   pt is right child of its parent
+                   Left-rotation required */
+                if (pt == parent_pt->right)
+                {
+                    leftRotate(root, parent_pt);
+                    pt = parent_pt;
+                    parent_pt = pt->parent;
+                }
+
+                /* Case : 3
+                   pt is left child of its parent
+                   Right-rotation required */
+                rightRotate(root, grand_parent_pt);
+                char temp = parent_pt->color;
+                parent_pt->color = grand_parent_pt->color;
+                grand_parent_pt->color = temp;
+                pt = parent_pt;
+            }
+        }
+
+        /* Case : B
+           Parent of pt is right child of Grand-parent of pt */
+        else
+        {
+            struct Node *uncle_pt = grand_parent_pt->left;
+
+            /*  Case : 1
+                The uncle of pt is also red
+                Only Recoloring required */
+            if ((uncle_pt != NULL) && (uncle_pt->color == 'R'))
+            {
+                grand_parent_pt->color = 'R';
+                parent_pt->color = 'B';
+                uncle_pt->color = 'B';
+                pt = grand_parent_pt;
+            }
+            else
+            {
+                /* Case : 2
+                   pt is left child of its parent
+                   Right-rotation required */
+                if (pt == parent_pt->left)
+                {
+                    rightRotate(root, parent_pt);
+                    pt = parent_pt;
+                    parent_pt = pt->parent;
+                }
+
+                /* Case : 3
+                   pt is right child of its parent
+                   Left-rotation required */
+                leftRotate(root, grand_parent_pt);
+                char temp = parent_pt->color;
+                parent_pt->color = grand_parent_pt->color;
+                grand_parent_pt->color = temp;
+                pt = parent_pt;
+            }
+        }
+    }
+
+    (*root)->color = 'B'; // root must be black
+}
+
+// Function to insert a new node with given data
+void insert(struct Node **root, int data)
+{
+    struct Node *pt = newNode(data);
+
+    // Do a normal BST insert
+    struct Node *y = NULL;
+    struct Node *x = *root;
+
+    while (x != NULL)
+    {
+        y = x;
+        if (pt->data < x->data)
+            x = x->left;
+        else
+            x = x->right;
+    }
+
+    pt->parent = y;
+
+    if (y == NULL)
+        *root = pt;
+    else if (pt->data < y->data)
+        y->left = pt;
+    else
+        y->right = pt;
+
+    // Fix Red-Black tree violations
+    fixViolation(root, pt);
+}
+
+// Function to do inorder traversal
+void inorder(struct Node *root)
+{
+    if (root == NULL)
+        return;
+
+    inorder(root->left);
+    printf("%d %c ", root->data, root->color);
+    inorder(root->right);
+}
+
+// Driver program to test above functions
+int main()
+{
+    struct Node *root = NULL;
+
+    // Insert some values to the tree
+    insert(&root, 10);
+    insert(&root, 20);
+    insert(&root, 30);
+    insert(&root, 40);
+    insert(&root, 50);
+    insert(&root, 60);
+    insert(&root, 70);
+
+    // Print the inorder traversal of the tree
+    printf("Inorder traversal of the created tree\n");
+    inorder(root);
+
+    return 0;
+}
